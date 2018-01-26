@@ -140,7 +140,8 @@
     data = {
       musics: [],
       current: 0,
-      playId: -1
+      playId: -1,
+      backgroundAudioManager: null
     };
     methods = {
     };
@@ -148,6 +149,7 @@
     };
     async onLoad() {
       this.getMusics(["2536","2534","2533","2530","2532","2476","2529","2518","2526","2527"])
+      this.backgroundAudioManager = wx.getBackgroundAudioManager()
     };
     async getMusics(idList) {
       let musics = this.data.musics;
@@ -166,24 +168,24 @@
         })
       }
     };
-    handleChange(e) {
-      let that = this;
-      let current = e.detail.current;
-      let length = this.data.musics.length;
-      if (current === length) {
-        this.setData({
-          current: length
-        });
-        wx.navigateTo({
-          url: '../history/index?page=music',
-          success: () => {
-            that.setData({
-              current: length - 1
-            })
-          }
-        })
-      }
-    };
+    // handleChange(e) {
+    //   let that = this;
+    //   let current = e.detail.current;
+    //   let length = this.data.musics.length;
+    //   if (current === length) {
+    //     this.setData({
+    //       current: length
+    //     });
+    //     wx.navigateTo({
+    //       url: '../history/index?page=music',
+    //       success: () => {
+    //         that.setData({
+    //           current: length - 1
+    //         })
+    //       }
+    //     })
+    //   }
+    // };
     togglePlay(e) {
       let musics = this.data.musics;
       let playId = this.data.playId;
@@ -210,13 +212,12 @@
       })
     };
     playMusic(music) {
-      wx.playBackgroundAudio({
-        dataUrl: music.music_id,
-        title: music.title
-      })
+      this.backgroundAudioManager.tit = music.title;
+      // this.backgroundAudioManager.src = music.music_id;
+      this.backgroundAudioManager.src =  'http://183.131.192.176/file3.data.weipan.cn/23518267/025305f9c564504a35d33c66e217086f0832afa2?ip=1516963892,183.129.247.130&ssig=k8c7TIXrco&Expires=1516964492&KID=sae,l30zoo1wmz&fn=%E9%82%A3%E8%8B%B1%20-%20%E5%BE%81%E6%9C%8D.mp3&skiprd=2&se_ip_debug=183.129.247.130&corp=2&from=1221134&wsrid_tag=5a6b0384_PSzjjhdxxw175_31315-61110&wsiphost=local';
     };
     pauseMusic() {
-      wx.pauseBackgroundAudio()
+      this.backgroundAudioManager.pause()
     };
     switchContent(e) {
       let id = e.currentTarget.dataset.id;
