@@ -1,106 +1,160 @@
 <style>
-    .movies {
-        height: 100%;
-    }
-
-    .movie {
-        position: relative;
-        margin-bottom: 5px;
-    }
-
-    .movie-cover {
-        width: 100%;
-        height: 160px;
-        box-shadow: 0 2px 2px #ebebeb;
-    }
-
-    .movie-score {
-        position: absolute;
-        right: 10px;
-        bottom: 10px;
-        font-size: 28px;
-        color: #f00;
-    }
-    .movie-title {
-        width: 100%;
-        height: 160px;
-        box-shadow: 0 2px 2px #ebebeb;
-    }
-    .movie-title-text{
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        padding-top: 20%;
-    }
-
+  .s-tit {
+    padding-top: 20px;
+    font-size: 24px;
+    text-align: center;
+  }
+  .s-tit-sub {
+    padding: 10px 20px;
+    font-size: 20px;
+  }
+  .s-inp {
+    padding: 5px 20px;
+    padding-left: 60px;
+    position: relative;
+  }
+  .s-inp-tit {
+    position: absolute;
+    left: 20px;
+    line-height: 42px;
+  }
+  .s-inp input {
+    border-bottom: 1px solid #dfdfdf;
+    padding: 8px 0; 
+  }
+  .s-text {
+    padding: 10px 20px;
+    font-size: 18px;
+  }
+  .s-sm {
+    padding-left: 40px;
+    font-size: 12px;
+  }
 </style>
 <template>
-    <view class="container">
-        <scroll-view class="movies" scroll-y="true" bindscrolltolower="getMovies">
-            <view wx:for="{{movies}}" class="movie" wx:key="id" data-id="{{item.id}}" bindtap="getDetail">
-                <view wx:if="{{!item.cover}}" class="movie-title">
-                    <text class="movie-title-text">{{item.title}}</text>
-                </view>
-                <image class="movie-cover" wx:if="{{item.cover}}" src="{{item.cover}}" mode="scaleToFill"></image>
-                <view class="movie-score" wx:if="{{item.cover}}">
-                    <text>{{item.score || '无'}}</text>
-                </view>
-            </view>
-        </scroll-view>
+  <view class="container">
+    <view class="s-tit">计算器</view>
+    <view class="s-inp">
+      <text class="s-inp-tit">年：</text>
+      <input  bindinput="bindNian" type="number" placeholder="请输入年" value="{{nian}}"/>
     </view>
-
+    <view class="s-inp">
+      <text class="s-inp-tit">月：</text>
+      <input  bindinput="bindYue" type="number" placeholder="请输入月"/>
+    </view>
+    <view class="s-inp">
+      <text class="s-inp-tit">日：</text>
+      <input  bindinput="bindRi" type="number" placeholder="请输入日" value="{{ri}}"/>
+    </view>
+    <view class="s-text">当前时间：
+      <text>{{nowDateStr}}</text>
+    </view>
+    <view class="s-tit-sub">计算得：</view>
+    <view class="s-text">
+      剩余月：
+      <text>{{jsyue}}</text>
+      <text class="s-sm" wx:if="{{endDate}}">({{nextDateStr}}~{{endDateStr}})</text>
+    </view>
+    <view class="s-text">
+      剩余天：
+      <text>{{jsri}}</text>
+      <text class="s-sm" wx:if="{{endDate}}">({{nowDateStr}}~{{nextDateStr}})</text>
+    </view>
+   
+  </view>
 </template>
 
 <script>
-    import wepy from 'wepy';
-    import api from '../../api/api.js'
-
-    export default class Index extends wepy.page {
-
-        config = {
-            "navigationBarTitleText": "电影"
-        };
-        components = {
-
-        };
-
-
-        data = {
-            movies: [],
-            lastId: 0
-        };
-        methods = {
-
-        };
-
-        events = {
-
-        };
-        async onLoad() {
-            this.getMovies();
-        };
-        async getMovies () {
-            let lastId = this.data.lastId;
-            if (lastId >= 0) {
-                let res = await api.getMovieListById({query: {id: lastId}})
-                if (res.data.res === 0) {
-                    let moreMovies = res.data.data;
-                    let length = moreMovies.length;
-                    let lastId = length ? moreMovies[length - 1].id : -1;
-                    let movies = this.data.movies.concat(moreMovies);
-                    this.movies = movies;
-                    this.lastId = lastId;
-//                    this.setData({ movies, lastId });
-                    this.$apply();
-                }
-            }
-        };
-        getDetail (e) {
-            let id = e.currentTarget.dataset.id;
-            wx.navigateTo({
-                url: 'detail?id=' + id
-            })
+  import wepy from 'wepy';
+  export default class Index extends wepy.page {
+    config = {
+      "navigationBarTitleText": "工具"
+    };
+    components = {
+    };
+    data = {
+      nian: '',
+      yue: '',
+      ri: 1,
+      jsyue: 0,
+      jsri: 0,
+      endDate: null,
+      endDateStr: '',
+      nowDate: new Date(),
+      nowDateStr: '',
+      nextDate: new Date(),
+      nextDateStr: '',
+    };
+    methods = {
+      bindNian (e) {
+        this.nian = e.detail.value
+        this.changeDate();
+      },
+      bindYue (e) {
+        this.yue = e.detail.value
+        this.changeDate();
+      },
+      bindRi (e) {
+        this.ri = e.detail.value
+        this.changeDate();
+      },
+    };
+    events = {};
+    async onLoad() {
+      // 时间格式化处理  date.Format('yyyy-MM-dd hh:mm:ss')
+      Date.prototype.Format = function (fmtTemp) { // author: meizz
+        let fmt = fmtTemp
+        const o = {
+          'M+': this.getMonth() + 1,                 // 月份
+          'd+': this.getDate(),                    // 日
+          'h+': this.getHours(),                   // 小时
+          'm+': this.getMinutes(),                 // 分
+          's+': this.getSeconds(),                 // 秒
+          'q+': Math.floor((this.getMonth() + 3) / 3), // 季度
+          S: this.getMilliseconds()             // 毫秒
         }
+        if (/(y+)/.test(fmt)) { fmt = fmt.replace(RegExp.$1, (`${this.getFullYear()}`).substr(4 - RegExp.$1.length)) }
+        for (const k in o) {
+          if (new RegExp(`(${k})`).test(fmt)) { fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1) ? (o[k]) : ((`00${o[k]}`).substr((`${o[k]}`).length))) }
+        }
+        return fmt
+      }
+      this.nowDateStr = this.nowDate.Format('yyyy-MM-dd')
+      this.nian = this.nowDate.Format('yyyy')
+    };
+    async getMovies() {};
+    changeDate() {
+      console.log(this.nian+'-'+this.yue+'-'+this.ri);
+      if (this.nian && this.yue && this.ri) {
+        const dateTemp = new Date(this.nian+'-'+this.yue+'-'+this.ri)
+        if (dateTemp && dateTemp != 'Invalid Date' && dateTemp > this.nowDate) {
+          this.endDate = dateTemp
+          this.endDateStr = this.endDate.Format('yyyy-MM-dd')
+          this.jsyue = this.endDate.getMonth() - this.nowDate.getMonth()
+          if (this.ri/1 > this.nowDate.Format('d')/1) {
+            this.nextDate.setMonth(this.nowDate.getMonth(),this.ri)
+          } else {
+            this.jsyue = this.jsyue  - 1
+            this.nextDate.setMonth((this.nowDate.getMonth() + 1),this.ri)
+          }
+          this.nextDateStr = this.nextDate.Format('yyyy-MM-dd')
+          this.jsri = (this.nextDate - this.nowDate) / (24*60*60*1000)
+          this.jsri = this.jsri.toFixed()
+        } else {
+          this.errorChange()
+        }
+      } else {
+        this.errorChange()
+      }
+      this.$apply();
     }
+    errorChange() {
+      this.endDate = null 
+      this.endDateStr = ''
+      this.nextDate = new Date()
+      this.nextDateStr = ''
+      this.jsyue = 0
+      this.jsri = 0
+    }
+  }
 </script>
