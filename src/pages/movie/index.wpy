@@ -126,7 +126,7 @@
     changeDate() {
       console.log(this.nian+'-'+this.yue+'-'+this.ri);
       if (this.nian && this.yue && this.ri) {
-        const dateTemp = new Date(this.nian+'-'+this.yue+'-'+this.ri)
+        const dateTemp = new Date(this.nian+'/'+this.yue+'/'+this.ri)
         if (dateTemp && dateTemp != 'Invalid Date' && dateTemp > this.nowDate) {
           this.endDate = dateTemp
           this.endDateStr = this.endDate.Format('yyyy-MM-dd')

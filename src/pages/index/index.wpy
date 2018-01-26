@@ -7,7 +7,7 @@
   <view class="container">
     <swiper class="vol-swiper" current="{{current}}" bindchange="handleChange">
       <volList :list="vols"></volList>
-      <swiper-item>一一 surprise</swiper-item>
+      <!-- <swiper-item>一一 surprise</swiper-item> -->
     </swiper>
   </view>
 </template>
